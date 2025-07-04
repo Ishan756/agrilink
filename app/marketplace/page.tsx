@@ -56,6 +56,7 @@ const mockProducts = [
  
 ];
 // Remove mockProducts and use API data
+
 export default function MarketplacePage() {
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -63,24 +64,21 @@ export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<any>({});
 
   useEffect(() => {
     fetch("/api/products")
       .then((res) => res.json())
       .then((data) => {
-        setAllProducts(data);
-        setProducts(data);
+        const combined = [...mockProducts, ...(Array.isArray(data) ? data : [])];
+        setAllProducts(combined);
+        setProducts(combined);
       });
   }, []);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    const filtered = allProducts.filter(product =>
-      product.name.toLowerCase().includes(query.toLowerCase()) ||
-      product.description.toLowerCase().includes(query.toLowerCase()) ||
-      product.category.toLowerCase().includes(query.toLowerCase())
-    );
-    setProducts(filtered);
+    filterProducts({ ...activeFilters, search: query });
   };
 
   const handleSort = (sortValue: string) => {
@@ -99,8 +97,45 @@ export default function MarketplacePage() {
       }
     });
     setProducts(sorted);
-  };
-   useEffect(() => {
+  };  
+ const filterProducts = (filters: any) => {
+  let filtered = [...allProducts];
+
+  // Multiple categories
+  if (filters.category && Array.isArray(filters.category) && filters.category.length > 0) {
+    filtered = filtered.filter(p => filters.category.includes(p.category.toLowerCase()));
+  }
+
+  // Multiple regions
+  if (filters.region && Array.isArray(filters.region) && filters.region.length > 0) {
+    filtered = filtered.filter(p => filters.region.includes(p.location.region.toLowerCase()));
+  }
+
+  // Organic
+  if (filters.organic !== undefined) {
+    filtered = filtered.filter(p => p.specifications.organic === filters.organic);
+  }
+
+  // Price range
+  if (filters.priceRange && Array.isArray(filters.priceRange)) {
+    filtered = filtered.filter(
+      p => p.price.current >= filters.priceRange[0] && p.price.current <= filters.priceRange[1]
+    );
+  }
+
+  // Search
+  if (filters.search) {
+    filtered = filtered.filter(product =>
+      product.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+      product.description.toLowerCase().includes(filters.search.toLowerCase()) ||
+      product.category.toLowerCase().includes(filters.search.toLowerCase())
+    );
+  }
+
+  setProducts(filtered);
+  setActiveFilters(filters);
+};
+  useEffect(() => {
   fetch("/api/products")
     .then((res) => res.json())
     .then((data) => {
@@ -181,7 +216,11 @@ export default function MarketplacePage() {
         <div className="flex gap-8">
           {/* Sidebar Filters */}
           <div className={`lg:block ${showFilters ? 'block' : 'hidden'} w-full lg:w-64 shrink-0`}>
-            <FilterSidebar />
+            <FilterSidebar
+            allProducts={allProducts}
+            onFilter={filterProducts}
+            activeFilters={activeFilters}
+            />
           </div>
 
           {/* Products Grid */}

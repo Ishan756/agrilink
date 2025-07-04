@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -8,7 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 
-export function FilterSidebar() {
+export function FilterSidebar({
+  allProducts,
+  onFilter,
+  activeFilters,
+}: {
+  allProducts: any[];
+  onFilter: (filters: any) => void;
+  activeFilters: any;
+}) {
   const [priceRange, setPriceRange] = useState([0, 50]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
@@ -71,6 +79,15 @@ export function FilterSidebar() {
     setSelectedRegions([]);
     setPriceRange([0, 50]);
   };
+
+useEffect(() => {
+  onFilter({
+    category: selectedCategories, // always array
+    region: selectedRegions.map(r => r.toLowerCase()), // always array, lowercase for matching
+    organic: selectedAttributes.includes('organic') ? true : undefined,
+    priceRange,
+  });
+}, [selectedCategories, selectedAttributes, selectedRegions, priceRange]);
 
   const activeFiltersCount = selectedCategories.length + selectedAttributes.length + selectedRegions.length;
 

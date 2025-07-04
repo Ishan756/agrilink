@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useCartStore } from '@/lib/store/cart';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface ProductCardProps {
   product: {
@@ -50,7 +51,9 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
       <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
         <div className="flex">
           <div className="w-48 h-32 flex-shrink-0">
-            <img 
+            <Image
+              width={192}
+              height={128}
               src={product.image} 
               alt={product.name}
               className="w-full h-full object-cover"
@@ -203,6 +206,14 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
               Add to Cart
             </Button>
           </div>
+           <Link
+      href={`/chart/${product.id}`}
+      className="block mt-2"
+    >
+      <Button variant="outline" size="sm" className="w-full">
+        📈 View Price Chart
+      </Button>
+    </Link>
         </div>
       </CardContent>
     </Card>
